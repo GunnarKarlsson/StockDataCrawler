@@ -1,10 +1,12 @@
 package com.squidzoo.quamcrawler;
 
 
+import com.sun.xml.internal.ws.api.streaming.XMLStreamReaderFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
+import javax.swing.table.DefaultTableModel;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,14 +14,20 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.Vector;
 
 public class StockQuoteCrawler {
 
+    public enum StockDataType {
+        DEFAULT,
+        YIELD,
+        PE,
+        PB
+    }
+
     private static final int MIN_STOCK_CODE = 1;
-    private static final int MAX_STOCK_CODE = 6;
+    private static final int MAX_STOCK_CODE = 1000;
     private static final String FILE_NAME = "crawled_share_prices_"+ MIN_STOCK_CODE + "_to_" + MAX_STOCK_CODE + "_at_" + System.currentTimeMillis();
     private static final String QUAM_URL = "http://www.quamnet.com/Quote.action?request_locale=en_US&stockCode=";
     private static final int TIME_OUT_MS = 30000;
@@ -37,6 +45,59 @@ public class StockQuoteCrawler {
     private static final String EMPTY = "";
     private static final String PERCENTAGE = "%";
     private static Connection connection;
+
+    private static DefaultTableModel buildTableModel(ResultSet rs)
+            throws SQLException {
+
+        ResultSetMetaData metaData = rs.getMetaData();
+
+        // names of columns
+        Vector<String> columnNames = new Vector<String>();
+        int columnCount = metaData.getColumnCount();
+        for (int column = 1; column <= columnCount; column++) {
+            columnNames.add(metaData.getColumnName(column));
+        }
+
+        // data of the table
+        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        while (rs.next()) {
+            Vector<Object> vector = new Vector<Object>();
+            for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
+                vector.add(rs.getObject(columnIndex));
+            }
+            data.add(vector);
+        }
+
+        return new DefaultTableModel(data, columnNames);
+    }
+
+    public static DefaultTableModel getDataFromDb(StockDataType type){
+
+        String query = "SELECT * FROM stock";
+        switch (type) {
+            case YIELD:
+                query += " WHERE yield != 'N/A' ORDER BY yield desc";
+                break;
+            case PE:
+                query += " WHERE pe != 'N/A' ORDER BY pe asc";
+                break;
+            case PB:
+                query += " WHERE pb != 'N/A' ORDER BY pb asc";
+                break;
+            default:
+                break;
+        }
+
+        try {
+            connectDb();
+            PreparedStatement ps = connection.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
+            return buildTableModel(rs);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public void start() {
         Runnable r = new Runnable() {
