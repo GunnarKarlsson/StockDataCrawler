@@ -153,7 +153,7 @@ public class StockQuoteCrawler {
                         stock = setStockAttribute(stock, spanValue, tds, i + 1);
                     }
                 }
-                if (NOT_AVAILABLE.equals(stock.getPb()) && NOT_AVAILABLE.equals(stock.getPe()) && NOT_AVAILABLE.equals(stock.getYield())) {
+                if (NOT_AVAILABLE.equals(stock.getMarketCap()) && 0.0 == stock.getPe() && 0.0 == stock.getPb() && 0.0 == stock.getYield()) {
                     continue;
                 }
                 writeStockToDb(stock);
