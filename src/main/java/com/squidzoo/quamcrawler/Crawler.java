@@ -13,6 +13,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 public class Crawler {
 
@@ -34,23 +36,27 @@ public class Crawler {
     private static final String NEW_LINE = "\n";
     private static final String EMPTY = "";
     private static final String PERCENTAGE = "%";
+    private static Connection connection;
 
     public static void main(String[] args) {
-        Connection connection = DbConnectionConfig.getConnection();
+        connection = DbConnectionConfig.getConnection();
         if (connection != null) {
             System.out.println("Connection established to db");
         } else {
             System.out.println("No db connection");
+            return;
         }
         crawl();
     }
 
     private static void crawl() {
+        clearDb();
         System.out.println("Starting Crawler!");
         try {
             String result = createColumnNamesToFile();
             for (int k = MIN_STOCK_CODE; k <= MAX_STOCK_CODE; k++) {
                 Stock stock = new Stock();
+                stock.setCode(k);
                 System.out.println("Crawling stock code: " + k);
                 URL url = new URL(QUAM_URL + String.valueOf(k));
                 Document doc = Jsoup.parse(url, TIME_OUT_MS);
@@ -70,6 +76,7 @@ public class Crawler {
                         }
                     }
                 }
+                System.out.print(stock.toString());
                 writeStockToDb(stock);
                 if (!subResult.endsWith(NEW_LINE)) {
                     subResult += NEW_LINE;
@@ -77,7 +84,12 @@ public class Crawler {
                 result += subResult;
             }
             //System.out.println(result);
-            createCsvFile(result);
+            //createCsvFile(result);
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (UnknownHostException e) {
@@ -87,8 +99,35 @@ public class Crawler {
         }
     }
 
+    private static void clearDb() {
+        try {
+            String query = "DELETE FROM stock;";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static void writeStockToDb(Stock stock) {
-        //TODO
+        try {
+            String query = "INSERT iNTO stock (code, name, marketcap, pe, pb, yield) VALUES (?,?,?,?,?,?);";
+            PreparedStatement statement = connection.prepareStatement(query);
+            statement.setInt(1, stock.getCode());
+            statement.setString(2, stock.getName());
+            statement.setString(3, stock.getMarketCap());
+            statement.setFloat(4, stock.getPe());
+            statement.setFloat(5, stock.getPb());
+            statement.setFloat(6, stock.getYield());
+            statement.executeUpdate();
+            System.out.println("stock " + stock.getCode() +  " written to db");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void readFromDb() {
+
     }
 
     private static String handleSpan(String spanValue, Elements elements, int indexForValue) {

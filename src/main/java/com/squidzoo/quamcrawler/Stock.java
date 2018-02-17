@@ -51,12 +51,14 @@ public class Stock {
     }
 
     private int code = 0;
-    private String name = "";
-    private String marketCap = "";
+    private String name = "N/A";
+    private String marketCap = "N/A";
     private float pe = 0.0F;
     private float pb = 0.0F;
     private float yield = 0.0F;
 
-
-
+    @Override
+    public String toString() {
+        return "Stock: ("+ getCode() + ", " + getName() + ", " + getMarketCap() + ", " + getPe() + ", " + getPb() + ", " +  getYield() +")";
+    }
 }
