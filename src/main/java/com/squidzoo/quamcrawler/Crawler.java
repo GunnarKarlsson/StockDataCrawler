@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.sql.Connection;
 
 public class Crawler {
 
@@ -35,10 +36,21 @@ public class Crawler {
     private static final String PERCENTAGE = "%";
 
     public static void main(String[] args) {
+        Connection connection = DbConnectionConfig.getConnection();
+        if (connection != null) {
+            System.out.println("Connection established to db");
+        } else {
+            System.out.println("No db connection");
+        }
+        crawl();
+    }
+
+    private static void crawl() {
         System.out.println("Starting Crawler!");
         try {
             String result = createColumnNamesToFile();
             for (int k = MIN_STOCK_CODE; k <= MAX_STOCK_CODE; k++) {
+                Stock stock = new Stock();
                 System.out.println("Crawling stock code: " + k);
                 URL url = new URL(QUAM_URL + String.valueOf(k));
                 Document doc = Jsoup.parse(url, TIME_OUT_MS);
@@ -51,12 +63,14 @@ public class Crawler {
                     //System.out.println(spanValue);
                     int valueIndex = i + 1;
                     if (valueIndex < tds.size() - 1) {
+                        stock = setStockAttribute(stock, spanValue, tds, i + 1);
                         String temp = handleSpan(spanValue, tds, i + 1);
                         if (temp != UNUSED_SPAN) {
                             subResult += temp;
                         }
                     }
                 }
+                writeStockToDb(stock);
                 if (!subResult.endsWith(NEW_LINE)) {
                     subResult += NEW_LINE;
                 }
@@ -71,6 +85,10 @@ public class Crawler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void writeStockToDb(Stock stock) {
+        //TODO
     }
 
     private static String handleSpan(String spanValue, Elements elements, int indexForValue) {
@@ -98,10 +116,49 @@ public class Crawler {
         return result;
     }
 
+    private static Stock setStockAttribute(Stock stock, String spanValue, Elements elements, int indexForValue) {
+        switch (spanValue) {
+            case MARKET_CAP_LABEL:
+                stock.setMarketCap(printResult(elements, indexForValue));
+                break;
+            case PE_LABEL:
+                float value = 0.0F;
+                try {
+                    value = Float.valueOf(printResult(elements, indexForValue));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                stock.setPe(value);
+                break;
+            case PB_LABEL:
+                float valuePb = 0.0F;
+                try {
+                    valuePb = Float.valueOf(printResult(elements, indexForValue));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                stock.setPb(valuePb);
+                break;
+            case YIELD_LABEL:
+                float valueYield = 0.0F;
+                try {
+                    valueYield = Float.valueOf(printResult(elements, indexForValue));
+                } catch (Exception e) {
+                    e.printStackTrace();;
+                }
+                stock.setYield(valueYield);
+                break;
+            default:
+                break;
+        }
+        return stock;
+
+    }
+
     private static String printResult(Elements elements, int indexForValue) {
         String temp = elements.get(indexForValue).select(SPAN_ELEMENT).text();
-        temp = temp.replace(COMMA,EMPTY);
-        temp = temp.replace(PERCENTAGE,EMPTY);
+        temp = temp.replace(COMMA, EMPTY);
+        temp = temp.replace(PERCENTAGE, EMPTY);
         return temp;
     }
 
