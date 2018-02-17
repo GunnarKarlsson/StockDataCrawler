@@ -99,12 +99,12 @@ public class StockQuoteCrawler {
         void onFinished(int result);
     }
 
-    public void start(CrawlCallback callback) {
+    public void start(int start, int end, CrawlCallback callback) {
         Runnable r = new Runnable() {
             @Override
             public void run() {
                 connectDb();
-                int result = crawl();
+                int result = crawl(start, end);
                 if (callback != null) {
                     callback.onFinished(result);
                 }
@@ -123,11 +123,11 @@ public class StockQuoteCrawler {
         }
     }
 
-    private static int crawl() {
+    private static int crawl(int start, int end) {
         clearDb();
         System.out.println("Starting Crawler!");
         try {
-            for (int k = MIN_STOCK_CODE; k <= MAX_STOCK_CODE; k++) {
+            for (int k = start; k <= end; k++) {
                 Stock stock = new Stock();
                 stock.setCode(k);
                 System.out.println("Crawling stock code: " + k);

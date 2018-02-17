@@ -14,6 +14,8 @@ public class CrawlerApp {
     private JButton defaultButton;
     private JButton peButton;
     private JButton pbButton;
+    private JTextField startStockCodeTextField;
+    private JTextField endStockCodeTextField;
     private StockQuoteCrawler stockQuoteCrawler;
 
     private void setIcon() {
@@ -40,15 +42,21 @@ public class CrawlerApp {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        stockQuoteCrawler.start(new StockQuoteCrawler.CrawlCallback() {
-                            @Override
-                            public void onFinished(int result) {
-                                startCrawlButton.setEnabled(true);
-                                String message = result == - 1 ? "Fail" : "Success";
-                                startCrawlButton.setText("Crawl Finished: " + message);
-                                table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.DEFAULT));
-                            }
-                        });
+                        try {
+                            int startStockCode = Integer.valueOf(startStockCodeTextField.getText());
+                            int endStockCode = Integer.valueOf(endStockCodeTextField.getText());
+                            stockQuoteCrawler.start(startStockCode, endStockCode, new StockQuoteCrawler.CrawlCallback() {
+                                @Override
+                                public void onFinished(int result) {
+                                    startCrawlButton.setEnabled(true);
+                                    String message = result == -1 ? "Fail" : "Success";
+                                    startCrawlButton.setText("Crawl Finished: " + message + ". Click to crawl again.");
+                                    table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.DEFAULT));
+                                }
+                            });
+                        } catch (Exception e) {
+                            startCrawlButton.setText("Error. Click to crawl again");
+                        }
                     }
                 }).start();
             }
