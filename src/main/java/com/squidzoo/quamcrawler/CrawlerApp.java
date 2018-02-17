@@ -44,7 +44,8 @@ public class CrawlerApp {
                             @Override
                             public void onFinished(int result) {
                                 startCrawlButton.setEnabled(true);
-                                startCrawlButton.setText("Crawl Finished");
+                                String message = result == - 1 ? "Fail" : "Success";
+                                startCrawlButton.setText("Crawl Finished: " + message);
                                 table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.DEFAULT));
                             }
                         });

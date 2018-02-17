@@ -1,16 +1,13 @@
 package com.squidzoo.quamcrawler;
 
 
-import com.sun.xml.internal.ws.api.streaming.XMLStreamReaderFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import javax.swing.table.DefaultTableModel;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -29,7 +26,6 @@ public class StockQuoteCrawler {
 
     private static final int MIN_STOCK_CODE = 1;
     private static final int MAX_STOCK_CODE = 5;
-    private static final String FILE_NAME = "crawled_share_prices_" + MIN_STOCK_CODE + "_to_" + MAX_STOCK_CODE + "_at_" + System.currentTimeMillis();
     private static final String QUAM_URL = "http://www.quamnet.com/Quote.action?request_locale=en_US&stockCode=";
     private static final int TIME_OUT_MS = 30000;
     private static final String MARKET_CAP_LABEL = "Mkt Cap";
@@ -39,10 +35,8 @@ public class StockQuoteCrawler {
     private static final String TABLE_ELEMENT = "table";
     private static final String SPAN_ELEMENT = "span";
     private static final String TD_ELEMENT = "td";
-    private static final String UNUSED_SPAN = "unused_span";
     private static final String QUAM_TABLE_ID = "div#chartSummaryLeft";
     private static final String COMMA = ",";
-    private static final String NEW_LINE = "\n";
     private static final String EMPTY = "";
     private static final String PERCENTAGE = "%";
     private static final String NOT_AVAILABLE = "N/A";
@@ -54,16 +48,16 @@ public class StockQuoteCrawler {
         ResultSetMetaData metaData = rs.getMetaData();
 
         // names of columns
-        Vector<String> columnNames = new Vector<String>();
+        Vector<String> columnNames = new Vector<>();
         int columnCount = metaData.getColumnCount();
         for (int column = 1; column <= columnCount; column++) {
             columnNames.add(metaData.getColumnName(column));
         }
 
         // data of the table
-        Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+        Vector<Vector<Object>> data = new Vector<>();
         while (rs.next()) {
-            Vector<Object> vector = new Vector<Object>();
+            Vector<Object> vector = new Vector<>();
             for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
                 vector.add(rs.getObject(columnIndex));
             }
@@ -96,7 +90,7 @@ public class StockQuoteCrawler {
             ResultSet rs = ps.executeQuery();
             return buildTableModel(rs);
         } catch (SQLException e) {
-            //e.printStackTrace();
+            //Do nothing
         }
         return null;
     }
@@ -162,13 +156,10 @@ public class StockQuoteCrawler {
                 return -1;
             }
         } catch (MalformedURLException e) {
-            //e.printStackTrace();
             return -1;
         } catch (UnknownHostException e) {
-            //e.printStackTrace();
             return -1;
         } catch (IOException e) {
-            //e.printStackTrace();
             return -1;
         }
     }
@@ -179,7 +170,7 @@ public class StockQuoteCrawler {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.executeUpdate();
         } catch (SQLException e) {
-            //e.printStackTrace();
+            //Do nothing
         }
     }
 
@@ -196,7 +187,7 @@ public class StockQuoteCrawler {
             statement.executeUpdate();
             System.out.println("stock " + stock.getCode() + " written to db");
         } catch (SQLException e) {
-            //e.printStackTrace();
+            //Do nothing
         }
     }
 
@@ -210,7 +201,7 @@ public class StockQuoteCrawler {
                 try {
                     value = Float.valueOf(printResult(elements, indexForValue));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //o nothing
                 }
                 stock.setPe(value);
                 break;
@@ -219,7 +210,7 @@ public class StockQuoteCrawler {
                 try {
                     valuePb = Float.valueOf(printResult(elements, indexForValue));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //o nothing
                 }
                 stock.setPb(valuePb);
                 break;
@@ -228,8 +219,7 @@ public class StockQuoteCrawler {
                 try {
                     valueYield = Float.valueOf(printResult(elements, indexForValue));
                 } catch (Exception e) {
-                    e.printStackTrace();
-                    ;
+                    //Do nothing
                 }
                 stock.setYield(valueYield);
                 break;
