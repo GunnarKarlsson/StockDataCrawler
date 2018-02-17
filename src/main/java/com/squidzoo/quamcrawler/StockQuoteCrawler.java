@@ -125,12 +125,12 @@ public class StockQuoteCrawler {
 
     private static int crawl(int start, int end) {
         clearDb();
-        System.out.println("Starting Crawler!");
+        //System.out.println("Starting Crawler!");
         try {
             for (int k = start; k <= end; k++) {
                 Stock stock = new Stock();
                 stock.setCode(k);
-                System.out.println("Crawling stock code: " + k);
+                //System.out.println("Crawling stock code: " + k);
                 URL url = new URL(QUAM_URL + String.valueOf(k));
                 Document doc = Jsoup.parse(url, TIME_OUT_MS);
                 Elements elements = doc.select(QUAM_TABLE_ID);
@@ -185,7 +185,7 @@ public class StockQuoteCrawler {
             statement.setFloat(5, stock.getPb());
             statement.setFloat(6, stock.getYield());
             statement.executeUpdate();
-            System.out.println("stock " + stock.getCode() + " written to db");
+            //System.out.println("stock " + stock.getCode() + " written to db");
         } catch (SQLException e) {
             //Do nothing
         }
