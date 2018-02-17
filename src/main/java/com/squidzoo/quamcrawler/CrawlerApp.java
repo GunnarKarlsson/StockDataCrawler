@@ -3,7 +3,7 @@ package com.squidzoo.quamcrawler;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
+import com.apple.eawt.Application;
 
 public class CrawlerApp {
     private JButton startCrawlButton;
@@ -16,12 +16,17 @@ public class CrawlerApp {
     private JButton pbSortButton;
     private StockQuoteCrawler stockQuoteCrawler;
 
+    private void setIcon() {
+        Application.getApplication().setDockIconImage(new ImageIcon(getClass().getResource("/AppIcon.png")).getImage());
+    }
+
     public CrawlerApp() {
+        setIcon();
         JFrame frame = new JFrame("Stock Quote Crawler");
         frame.setContentPane(mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 600);
-        //frame.pack();
+        frame.setIconImage(new ImageIcon("/AppIcon.png").getImage());
         frame.setVisible(true);
         this.stockQuoteCrawler = new StockQuoteCrawler();
 
@@ -33,6 +38,7 @@ public class CrawlerApp {
                 stockQuoteCrawler.start();
             }
         });
+
         populateTableButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -17,6 +17,7 @@ import java.net.UnknownHostException;
 import java.sql.*;
 import java.util.Vector;
 
+
 public class StockQuoteCrawler {
 
     public enum StockDataType {
