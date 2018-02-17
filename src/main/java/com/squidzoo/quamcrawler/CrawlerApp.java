@@ -27,7 +27,7 @@ public class CrawlerApp {
         JFrame frame = new JFrame("Stock Quote Crawler");
         frame.setContentPane(mainPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 600);
+        frame.pack();
         frame.setIconImage(new ImageIcon("/AppIcon.png").getImage());
         frame.setVisible(true);
         this.stockQuoteCrawler = new StockQuoteCrawler();
