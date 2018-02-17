@@ -130,9 +130,19 @@ public class StockQuoteCrawler {
             for (int k = start; k <= end; k++) {
                 Stock stock = new Stock();
                 stock.setCode(k);
-                //System.out.println("Crawling stock code: " + k);
                 URL url = new URL(QUAM_URL + String.valueOf(k));
                 Document doc = Jsoup.parse(url, TIME_OUT_MS);
+
+                Elements els = doc.getElementsByClass("qtxt_s_blue_b");
+                for (int p = 0; p < els.size(); p++) {
+                    if (els.get(p).text().contains("YEAR CHART")) {
+                        String text = els.get(p).text();
+                        int endIndex = text.indexOf("(");
+                        String name = text.substring(0, endIndex);
+                        stock.setName(name);
+                    }
+                }
+
                 Elements elements = doc.select(QUAM_TABLE_ID);
                 Elements tables = elements.select(TABLE_ELEMENT);
                 Elements tds = tables.select(TD_ELEMENT);
