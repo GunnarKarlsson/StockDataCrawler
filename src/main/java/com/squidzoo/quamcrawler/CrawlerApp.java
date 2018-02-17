@@ -8,12 +8,12 @@ import com.apple.eawt.Application;
 public class CrawlerApp {
     private JButton startCrawlButton;
     private JPanel mainPanel;
-    private JProgressBar crawlProgressBar;
     private JTable table;
     private JButton populateTableButton;
-    private JButton yieldSortButton;
-    private JButton peSortButton;
-    private JButton pbSortButton;
+    private JButton yieldButton;
+    private JButton defaultButton;
+    private JButton peButton;
+    private JButton pbButton;
     private StockQuoteCrawler stockQuoteCrawler;
 
     private void setIcon() {
@@ -33,9 +33,23 @@ public class CrawlerApp {
         startCrawlButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                crawlProgressBar.setIndeterminate(true);
+
                 startCrawlButton.setEnabled(false);
-                stockQuoteCrawler.start();
+                startCrawlButton.setText("Crawling in process...");
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        stockQuoteCrawler.start(new StockQuoteCrawler.CrawlCallback() {
+                            @Override
+                            public void onFinished(int result) {
+                                startCrawlButton.setEnabled(true);
+                                startCrawlButton.setText("Crawl Finished");
+                                table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.DEFAULT));
+                            }
+                        });
+                    }
+                }).start();
             }
         });
 
@@ -45,22 +59,28 @@ public class CrawlerApp {
                 table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.DEFAULT));
             }
         });
-        yieldSortButton.addActionListener(new ActionListener() {
+        yieldButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.YIELD));
             }
         });
-        peSortButton.addActionListener(new ActionListener() {
+        peButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.PE));
             }
         });
-        pbSortButton.addActionListener(new ActionListener() {
+        pbButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.PB));
+            }
+        });
+        defaultButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                table.setModel(stockQuoteCrawler.getDataFromDb(StockQuoteCrawler.StockDataType.DEFAULT));
             }
         });
     }

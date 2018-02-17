@@ -28,8 +28,8 @@ public class StockQuoteCrawler {
     }
 
     private static final int MIN_STOCK_CODE = 1;
-    private static final int MAX_STOCK_CODE = 1000;
-    private static final String FILE_NAME = "crawled_share_prices_"+ MIN_STOCK_CODE + "_to_" + MAX_STOCK_CODE + "_at_" + System.currentTimeMillis();
+    private static final int MAX_STOCK_CODE = 5;
+    private static final String FILE_NAME = "crawled_share_prices_" + MIN_STOCK_CODE + "_to_" + MAX_STOCK_CODE + "_at_" + System.currentTimeMillis();
     private static final String QUAM_URL = "http://www.quamnet.com/Quote.action?request_locale=en_US&stockCode=";
     private static final int TIME_OUT_MS = 30000;
     private static final String MARKET_CAP_LABEL = "Mkt Cap";
@@ -45,6 +45,7 @@ public class StockQuoteCrawler {
     private static final String NEW_LINE = "\n";
     private static final String EMPTY = "";
     private static final String PERCENTAGE = "%";
+    private static final String NOT_AVAILABLE = "N/A";
     private static Connection connection;
 
     private static DefaultTableModel buildTableModel(ResultSet rs)
@@ -72,7 +73,7 @@ public class StockQuoteCrawler {
         return new DefaultTableModel(data, columnNames);
     }
 
-    public static DefaultTableModel getDataFromDb(StockDataType type){
+    public static DefaultTableModel getDataFromDb(StockDataType type) {
 
         String query = "SELECT * FROM stock";
         switch (type) {
@@ -95,17 +96,24 @@ public class StockQuoteCrawler {
             ResultSet rs = ps.executeQuery();
             return buildTableModel(rs);
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return null;
     }
 
-    public void start() {
+    public interface CrawlCallback {
+        void onFinished(int result);
+    }
+
+    public void start(CrawlCallback callback) {
         Runnable r = new Runnable() {
             @Override
             public void run() {
                 connectDb();
-                crawl();
+                int result = crawl();
+                if (callback != null) {
+                    callback.onFinished(result);
+                }
             }
         };
         r.run();
@@ -121,11 +129,10 @@ public class StockQuoteCrawler {
         }
     }
 
-    private static void crawl() {
+    private static int crawl() {
         clearDb();
         System.out.println("Starting Crawler!");
         try {
-            String result = createColumnNamesToFile();
             for (int k = MIN_STOCK_CODE; k <= MAX_STOCK_CODE; k++) {
                 Stock stock = new Stock();
                 stock.setCode(k);
@@ -135,39 +142,34 @@ public class StockQuoteCrawler {
                 Elements elements = doc.select(QUAM_TABLE_ID);
                 Elements tables = elements.select(TABLE_ELEMENT);
                 Elements tds = tables.select(TD_ELEMENT);
-                String subResult = String.valueOf(k) + COMMA;
                 for (int i = 0; i < tds.size(); i++) {
                     String spanValue = tds.get(i).select(SPAN_ELEMENT).text().trim();
-                    //System.out.println(spanValue);
                     int valueIndex = i + 1;
                     if (valueIndex < tds.size() - 1) {
                         stock = setStockAttribute(stock, spanValue, tds, i + 1);
-                        String temp = handleSpan(spanValue, tds, i + 1);
-                        if (temp != UNUSED_SPAN) {
-                            subResult += temp;
-                        }
                     }
                 }
-                System.out.print(stock.toString());
-                writeStockToDb(stock);
-                if (!subResult.endsWith(NEW_LINE)) {
-                    subResult += NEW_LINE;
+                if (NOT_AVAILABLE.equals(stock.getPb()) && NOT_AVAILABLE.equals(stock.getPe()) && NOT_AVAILABLE.equals(stock.getYield())) {
+                    continue;
                 }
-                result += subResult;
+                writeStockToDb(stock);
             }
-            //System.out.println(result);
-            //createCsvFile(result);
             try {
                 connection.close();
+                return 0;
             } catch (SQLException e) {
                 e.printStackTrace();
+                return -1;
             }
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            return -1;
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            return -1;
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            return -1;
         }
     }
 
@@ -177,7 +179,7 @@ public class StockQuoteCrawler {
             PreparedStatement statement = connection.prepareStatement(query);
             statement.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
@@ -192,35 +194,10 @@ public class StockQuoteCrawler {
             statement.setFloat(5, stock.getPb());
             statement.setFloat(6, stock.getYield());
             statement.executeUpdate();
-            System.out.println("stock " + stock.getCode() +  " written to db");
+            System.out.println("stock " + stock.getCode() + " written to db");
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
-    }
-
-    private static String handleSpan(String spanValue, Elements elements, int indexForValue) {
-        String result = UNUSED_SPAN;
-        switch (spanValue) {
-            case MARKET_CAP_LABEL:
-                result = printResult(elements, indexForValue);
-                result += COMMA;
-                break;
-            case PE_LABEL:
-                result = printResult(elements, indexForValue);
-                result += COMMA;
-                break;
-            case PB_LABEL:
-                result = printResult(elements, indexForValue);
-                result += COMMA;
-                break;
-            case YIELD_LABEL:
-                result = printResult(elements, indexForValue);
-                result += NEW_LINE;
-                break;
-            default:
-                break;
-        }
-        return result;
     }
 
     private static Stock setStockAttribute(Stock stock, String spanValue, Elements elements, int indexForValue) {
@@ -251,7 +228,8 @@ public class StockQuoteCrawler {
                 try {
                     valueYield = Float.valueOf(printResult(elements, indexForValue));
                 } catch (Exception e) {
-                    e.printStackTrace();;
+                    e.printStackTrace();
+                    ;
                 }
                 stock.setYield(valueYield);
                 break;
@@ -267,21 +245,6 @@ public class StockQuoteCrawler {
         temp = temp.replace(COMMA, EMPTY);
         temp = temp.replace(PERCENTAGE, EMPTY);
         return temp;
-    }
-
-    private static String createColumnNamesToFile() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Stock code");
-        sb.append(COMMA);
-        sb.append("Market Cap");
-        sb.append(COMMA);
-        sb.append("P/E");
-        sb.append(COMMA);
-        sb.append("P/B");
-        sb.append(COMMA);
-        sb.append("Yield");
-        sb.append(NEW_LINE);
-        return sb.toString();
     }
 }
 
