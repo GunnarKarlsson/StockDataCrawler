@@ -24,8 +24,6 @@ public class StockQuoteCrawler {
         PB
     }
 
-    private static final int MIN_STOCK_CODE = 1;
-    private static final int MAX_STOCK_CODE = 5;
     private static final String QUAM_URL = "http://www.quamnet.com/Quote.action?request_locale=en_US&stockCode=";
     private static final int TIME_OUT_MS = 30000;
     private static final String MARKET_CAP_LABEL = "Mkt Cap";
@@ -125,7 +123,6 @@ public class StockQuoteCrawler {
 
     private static int crawl(int start, int end) {
         clearDb();
-        //System.out.println("Starting Crawler!");
         try {
             for (int k = start; k <= end; k++) {
                 Stock stock = new Stock();
@@ -211,7 +208,7 @@ public class StockQuoteCrawler {
                 try {
                     value = Float.valueOf(printResult(elements, indexForValue));
                 } catch (Exception e) {
-                    //o nothing
+                    //Do nothing
                 }
                 stock.setPe(value);
                 break;
@@ -220,7 +217,7 @@ public class StockQuoteCrawler {
                 try {
                     valuePb = Float.valueOf(printResult(elements, indexForValue));
                 } catch (Exception e) {
-                    //o nothing
+                    //Do nothing
                 }
                 stock.setPb(valuePb);
                 break;
