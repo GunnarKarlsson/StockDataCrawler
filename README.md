@@ -5,4 +5,4 @@ Crawler desktop app. Crawls for data to help indentify cheap Hong Kong stocks by
 + Crawls and retrieves stock data by parsing page DOM.
 + Saves data into local db
 + Shows data in a table in a Swing GUI app.
-+ The table is sortable by P/E, P/B, yield and stock code.
++ GUI list is sortable by P/E, P/B, yield and stock code.
