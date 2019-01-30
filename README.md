@@ -1,8 +1,8 @@
 # Crawler for Hong Kong listed stocks data
 
-Crawler to get data to help indentify cheap Hong Kong stocks by P/E, P/B and yield.
+Crawler desktop app. Crawls for data to help indentify cheap Hong Kong stocks by P/E, P/B and yield.
 
-+ crawls an certain website and retrieves stock data.
++ Crawls and retrieves stock data by parsing page DOM.
 + Saves data into local db
-+ Shows it in a table in a Swing GUI app.
++ Shows data in a table in a Swing GUI app.
 + The table is sortable by P/E, P/B, yield and stock code.
