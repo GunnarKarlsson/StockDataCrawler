@@ -1,4 +1,4 @@
-group 'QuamCrawler'
+group 'StockDataCrawler'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'groovy'

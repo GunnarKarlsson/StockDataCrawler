@@ -1,4 +1,4 @@
-package com.squidzoo.quamcrawler;
+package com.squidzoo.stockdatacrawler;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

@@ -1,4 +1,4 @@
-package com.squidzoo.quamcrawler;
+package com.squidzoo.stockdatacrawler;
 
 
 import org.jsoup.Jsoup;
@@ -24,7 +24,7 @@ public class StockQuoteCrawler {
         PB
     }
 
-    private static final String QUAM_URL = "http://www.quamnet.com/Quote.action?request_locale=en_US&stockCode=";
+    private static final String STOCK_QUOTE_URL = "https://example.com/quote?stockCode=";
     private static final int TIME_OUT_MS = 30000;
     private static final String MARKET_CAP_LABEL = "Mkt Cap";
     private static final String PE_LABEL = "P/E";
@@ -33,7 +33,7 @@ public class StockQuoteCrawler {
     private static final String TABLE_ELEMENT = "table";
     private static final String SPAN_ELEMENT = "span";
     private static final String TD_ELEMENT = "td";
-    private static final String QUAM_TABLE_ID = "div#chartSummaryLeft";
+    private static final String STOCK_TABLE_ID = "div#chartSummaryLeft";
     private static final String COMMA = ",";
     private static final String EMPTY = "";
     private static final String PERCENTAGE = "%";
@@ -127,7 +127,7 @@ public class StockQuoteCrawler {
             for (int k = start; k <= end; k++) {
                 Stock stock = new Stock();
                 stock.setCode(k);
-                URL url = new URL(QUAM_URL + String.valueOf(k));
+                URL url = new URL(STOCK_QUOTE_URL + String.valueOf(k));
                 Document doc = Jsoup.parse(url, TIME_OUT_MS);
 
                 Elements els = doc.getElementsByClass("qtxt_s_blue_b");
@@ -140,7 +140,7 @@ public class StockQuoteCrawler {
                     }
                 }
 
-                Elements elements = doc.select(QUAM_TABLE_ID);
+                Elements elements = doc.select(STOCK_TABLE_ID);
                 Elements tables = elements.select(TABLE_ELEMENT);
                 Elements tds = tables.select(TD_ELEMENT);
                 for (int i = 0; i < tds.size(); i++) {
